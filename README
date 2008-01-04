@@ -1,0 +1,98 @@
+= Introduction =
+cvUrlMoverPlugin allows a symfony application to maintain backwards-compatible and search-engine friendly URLs without the overhead of using sfRouting.
+
+= Requirements =
+  * symfony 1.1
+
+= Installation =
+  * Currently only available from Subversion:
+    {{{
+    svn co http://svn.symfony-project.com/plugins/cvUrlMoverPlugin/trunk
+    }}}
+  * Create a {{{ apps/fooApplication/config/bcurls.yml }}} file and define your routes as instructed below.
+
+= Important Note on Usage =
+This is *not* a replacement for symfony's routing system!  Although it is similar, it is very different because:
+  1. It only runs when the 404 action is called.
+  2. It sends HTTP code "301 Permanently Moved" redirects to the client.
+  3. Is not bound by the sfRouting suffix.
+
+= Configuration =
+The syntax for the bcurls.yml is simple.  Simply make the key the old URL and the value the new URL, like so:
+{{{
+before/i/discovered/symfony.html: love/it
+}}}
+
+The above rule above will redirect the URL {{{ /before/i/discovered/symfony.html }}} to the symfony module "love" and action "it".  You can repeat this over and over again for full coverage:
+
+{{{
+blog/just-launched.html:     blog/show?slug=just-launched
+blog/my-new-idea.html:       blog/show?slug=my-new-idea
+blog/new-computer.html:      blog/show?slug=new-computer
+blog/upgrading-to-symfony:   blog/show?slug=upgrading-to-symfony
+}}}
+
+But, that will be incredibly boring quite fast.  Wouldn't it be cool if you could simply write:
+
+{{{
+blog/(.+?)\.html: blog/show?slug=$1
+}}}
+
+and it would automatically route those to the blog?  Well, today is your lucky day because you can do exactly that.
+
+In the above example, {{{ /blog/(.+?)\.html }}} is a regular expression.  The plugin automatically makes the regular expression valid by adding the delimeters to both sides and making it match the entire string (internally, {{{ #^/blog/(.+?)\.html$# }}} is being passed to preg_match).  The system uses Perl regular expressions.
+
+Then, once it finds a match, it does replacement on the new URL to produce the redirected URL.  So, if the client requests URL {{{ /blog/i-love-cheese.html }}}, then the client will receive a 301 redirect to {{{ blog/show?slug=i-love-cheese }}}.  This plugin interfaces with sfRouting, so {{{ blog/show?slug=i-love-cheese }}} is "prettified" by sfRouting first.
+
+You can probably make all your URLs backwards-compatiable using this method, but there are a couple of advanced features you might want:
+
+== Preg Options ==
+By default, the regular expressions are case-insensitive as this is what most users will need.  However, if you require a route to be case-sensitive, you can easily set it up like so using the extended syntax:
+{{{
+regul[ae]r.expression:
+  type: preg
+  replacement: foobar
+  case: true # make it so it does not match Regular!Expression
+}}}
+
+If you want to pass additional flags to preg, such as making it evaluate PHP expressions, you can do it like so:
+{{{
+(regul[ae]r.expression):
+  type: preg
+  replacement: "md5('$1')"
+  flags: [e]
+}}}
+
+If you want to avoid the overhead of calling preg_replace() afterwards, you can disable it with:
+{{{
+(regul[ae]r.expression):
+  type: preg
+  replacement: foobar
+  replace: false
+}}}
+
+== String Comparisons ==
+If the overhead of using regular expressions is too much for you, then you can use direct string comparisons. Use the extended syntax like so:
+{{{
+foobar:
+  type: string
+  replacement: barfoo
+}}}
+
+Likewise, it is case-insensitive by default.  To make it case-sensitive:
+{{{
+foobar:
+  type: string
+  replacement: barfoo
+  case: true # will not match Foobar, but will match foobar
+}}}
+
+= Notes =
+  * The plugin only kicks in when the 404 action is called, so there is virtually no overhead in your regular application.
+  * The plugin also only kicks in if there haven't been any forwards.  So, if your blog action, for example, forwards the request to an invalid action, then the 404 page is displayed no matter what.
+
+= To Do =
+  * Unit tests for everything
+  * Crawler to find backwards-incompatiable URLs
+  * Matchers with more complex logic
+  * Customizable configuration (not bound to bcurls.yml file)

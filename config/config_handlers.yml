@@ -1,0 +1,3 @@
+# the master config file
+config/bcurls.yml:
+  class: cvUrlMoverConfigHandler
