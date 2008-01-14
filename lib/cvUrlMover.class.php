@@ -38,7 +38,7 @@ class cvUrlMover
    * Handles the 404 if coming from an event.  This will *only* handle the 404
    * error if there have not been any forwards.
    * @param sfEvent $event The event
-   * @throws sfStopException If redirect happens
+   * @throws cvUrlMoverRedirectException If redirect happens
    */
   public function handle404Event(sfEvent $event)
   {
@@ -54,7 +54,7 @@ class cvUrlMover
    * Handles the 404 if it can find a new URL.  If it finds a new URL, it sends
    * a 301 redirect to the client.  This is optimal for search engines.
    *
-   * @throws sfStopException If redirect happens
+   * @throws cvUrlMoverRedirectException If redirect happens
    */
   public function handle404()
   {
@@ -79,7 +79,7 @@ class cvUrlMover
   /**
    * Forces the redirect.
    * @param string $to The new symfony URL to use
-   * @throws sfStopException No matter what.
+   * @throws cvUrlMoverRedirectException No matter what.
    */
   protected function redirect($to)
   {
@@ -90,6 +90,6 @@ class cvUrlMover
     $this->context->getResponse()->setHttpHeader('Status', '301 Permanently Moved');
     $this->context->getResponse()->sendHttpHeaders();
 
-    throw new sfStopException('page has moved to ' . $to);
+    throw new cvUrlMoverRedirectException('page has moved to ' . $to);
   }
 }
