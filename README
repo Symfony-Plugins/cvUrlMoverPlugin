@@ -87,6 +87,9 @@ foobar:
   case: true # will not match Foobar, but will match foobar
 }}}
 
+= Pitfal =
+  * Your script suffix must be "." for this plugin to work right now. This will automatically fix itself once symfony 1.1 supports sfConfiguration.
+
 = Notes =
   * The plugin only kicks in when the 404 action is called, so there is virtually no overhead in your regular application.
   * The plugin also only kicks in if there haven't been any forwards.  So, if your blog action, for example, forwards the request to an invalid action, then the 404 page is displayed no matter what.
